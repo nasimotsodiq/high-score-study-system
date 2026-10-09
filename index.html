@@ -1,1 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Score Study System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#123b70;color:white;padding:24px 16px;text-align:center}
+header h1{margin:0 0 8px;font-size:25px}
+header p{margin:0;font-size:14px}
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;background:#092950;padding:12px}
+button,select,input{font-size:15px;padding:12px;border-radius:8px}
+button{border:0;background:#1769aa;color:white;cursor:pointer}
+button:hover{opacity:.9}
+nav button{background:#fff;color:#123b70}
+main{max-width:850px;margin:20px auto;padding:0 12px}
+.card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px #0001}
+h2{margin-top:0;color:#123b70}
+input,select{width:100%;border:1px solid #ccd5e1;margin:6px 0 14px;background:white}
+label{font-weight:bold}
+.primary{width:100%;margin-top:10px}
+.option{display:block;background:#f1f5f9;color:#172033;text-align:left;width:100%;margin:8px 0;border:1px solid #d7dfeb}
+.option.selected{background:#d7eaff;border:2px solid #1769aa}
+.option:disabled{cursor:default;opacity:1}
+.hidden{display:none}
+#timer{font-size:24px;font-weight:bold;color:#c1272d}
+.question{border-bottom:1px solid #e2e8f0;padding:16px 0}
+footer{text-align:center;padding:25px;color:#64748b;font-size:13px}
+.small{font-size:13px;color:#64748b;line-height:1.6}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+.badge{display:inline-block;background:#e4f3e8;color:#176339;padding:5px 8px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
 
+<header>
+<h1>🏆 HIGH SCORE</h1>
+<p>STUDY • PRACTISE • EXCEL</p>
+<p>GC NECO | JAMB | WAEC | NECO | SCHOOL EXAMS</p>
+</header>
+
+<nav>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('exam')">Take Exam</button>
+<button onclick="showPage('results')">My Results</button>
+<button onclick="showPage('leaderboard')">Leaderboard</button>
+<button onclick="showPage('tutor')">Study Help</button>
+</nav>
+
+<main>
+
+<section id="home" class="page">
+<div class="card">
+<h2>Welcome to High Score! 🎓</h2>
+<p>Your school study and examination practice platform.</p>
+<label for="student">Your name or study nickname</label>
+<input id="student" maxlength="40" placeholder="Enter your name">
+<button class="primary" onclick="saveName()">Save My Name</button>
+<p id="welcome" class="small"></p>
+</div>
+
+<div class="card">
+<h2>📚 What can you do here?</h2>
+<p>✅ Practise multiple-choice questions.</p>
+<p>⏱️ Take timed examinations.</p>
+<p>📊 Receive your score immediately.</p>
+<p>🏆 Review your saved results and leaderboard.</p>
+<p>📖 Review explanations after submitting.</p>
+<p class="small">This is the first version. Your results are saved in this browser on this device.</p>
+</div>
+
+<div class="card">
+<h2>Today's Study Challenge</h2>
+<p>Choose a subject, start an examination, and challenge yourself to improve.</p>
+<button class="primary" onclick="showPage('exam')">Start Practising →</button>
+</div>
+</section>
+
+<section id="exam" class="page hidden">
+<div class="card" id="setup">
+<h2>⏱️ Examination Centre</h2>
+<label for="subject">Choose a subject</label>
+<select id="subject">
+<option>Biology</option>
+<option>Chemistry</option>
+<option>Physics</option>
+<option>English Language</option>
+<option>Mathematics</option>
+</select>
+
+<label for="duration">Time allowed</label>
+<select id="duration">
+<option value="5">5 minutes — Quick test</option>
+<option value="10" selected>10 minutes — Practice</option>
+<option value="20">20 minutes — Standard practice</option>
+</select>
+
+<p class="small">Answer independently. Your timer starts when you begin. Your result is saved locally on this device.</p>
+<button class="primary" onclick="startExam()">Start Examination</button>
+</div>
+
+<div class="card hidden" id="test">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+<strong id="testTitle"></strong>
+<span id="timer">10:00</span>
+</div>
+<p id="progress" class="small"></p>
+<div id="questions"></div>
+<button class="primary" onclick="submitExam(false)">Submit Examination</button>
+</div>
+
+<div class="card hidden" id="result">
+<h2>📊 Examination Result</h2>
+<div id="score"></div>
+<div id="review"></div>
+<button class="primary" onclick="showPage('exam');resetExam()">Take Another Examination</button>
+</div>
+</section>
+
+<section id="results" class="page hidden">
+<div class="card">
+<h2>📊 My Results</h2>
+<div id="myResults"></div>
+<button onclick="clearMyResults()">Clear My Local Results</button>
+<p class="small">Clearing results cannot be undone. This affects only the results stored in this browser.</p>
+</div>
+</section>
+
+<section id="leaderboard" class="page hidden">
+<div class="card">
+<h2>🏆 Leaderboard</h2>
+<p class="small">Scores recorded on this device only. This is not yet a shared school-wide leaderboard.</p>
+<div id="board"></div>
+</div>
+</section>
+
+<section id="tutor" class="page hidden">
+<div class="card">
+<h2>🤖 Study Help</h2>
+<p>Use these prompts with your AI tutor to get help with school subjects.</p>
+<label for="topic">Subject</label>
+<select id="topic">
+<option>Biology</option>
+<option>Chemistry</option>
+<option>Physics</option>
+<option>English Language</option>
+<option>Mathematics</option>
+</select>
+<label for="lesson">What do you want to learn?</label>
+<input id="lesson" placeholder="e.g. Classification of living things">
+<button class="primary" onclick="getLesson()">Prepare My Study Prompt</button>
+<div id="lessonOutput"></div>
+<p class="small">This feature prepares a prompt; it does not connect to an AI service automatically.</p>
+</div>
+</section>
+
+</main>
+
+<footer>
+<strong>HIGH SCORE STUDY SYSTEM</strong>
+<p>Built to encourage learning, discipline and academic excellence.</p>
+<p>School study project • Version 1.0</p>
+</footer>
+
+<script>
+const banks = {
+Biology: [
+["Which organelle is mainly responsible for photosynthesis?","Mitochondrion","Chloroplast","Ribosome","Nucleus",1,"Chloroplasts contain chlorophyll, which absorbs light energy for photosynthesis."],
+["Which level of organisation consists of similar cells working together?","Organ","System","Tissue","Organism",2,"A tissue is a group of similar cells performing a particular function."],
+["Which organism belongs to Kingdom Fungi?","Mushroom","Amoeba","Maize","Human",0,"Mushrooms are fungi."],
+["Which process releases energy from food in cells?","Transpiration","Respiration","Pollination","Excretion",1,"Cellular respiration releases usable energy from food."],
+["Which structure controls most activities of a eukaryotic cell?","Cell wall","Vacuole","Nucleus","Cytoplasm",2,"The nucleus contains genetic material and regulates many cell activities."]
+],
+Chemistry: [
+["What is the chemical symbol for sodium?","S","Na","So","N",1,"Na is the chemical symbol for sodium."],
+["Which particle has a negative charge?","Proton","Neutron","Electron","Nucleus",2,"Electrons carry a negative electrical charge."],
+["What is the pH of a neutral solution at 25°C?","0","5","7","14",2,"A neutral aqueous solution has a pH of 7 at 25°C."],
+["Which gas is required for ordinary combustion?","Oxygen","Nitrogen","Helium","Hydrogen",0,"Oxygen supports ordinary combustion."],
+["What is the chemical formula of water?","CO2","H2O","O2","NaCl",1,"Water contains two hydrogen atoms and one oxygen atom."]
+],
+Physics: [
+["What is the SI unit of force?","Joule","Watt","Newton","Pascal",2,"Force is measured in newtons."],
+["Which instrument measures electric current?","Voltmeter","Ammeter","Barometer","Thermometer",1,"An ammeter measures electric current."],
+["What is the approximate speed of light in a vacuum?","300 m/s","3,000 m/s","30,000 m/s","300,000,000 m/s",3,"Light travels at approximately 3 × 10^8 metres per second in a vacuum."],
+["Which form of energy is associated with a moving object?","Kinetic","Chemical","Nuclear","Potential only",0,"Kinetic energy is the energy of motion."],
+["Which device converts electrical energy into mechanical motion?","Electric motor","Generator only","Fuse","Switch",0,"An electric motor converts electrical energy into mechanical energy."]
+],
+"English Language": [
+["Choose the correctly spelt word.","Accomodation","Accommodation","Acommodation","Acomodation",1,"Accommodation is spelt with double c and double m."],
+["Choose the opposite of 'ancient'.","Old","Historic","Modern","Past",2,"Modern is the opposite of ancient."],
+["Choose the correct sentence.","She go to school.","She going school.","She goes to school.","She gone to school.",2,"The singular subject 'she' takes 'goes' in the simple present tense."],
+["A person who writes books is an ____.","Author","Audience","Actor","Architect",0,"An author writes books or other written works."],
+["What is the plural of 'child'?","Childs","Childes","Children","Childrens",2,"The plural of child is children."]
+],
+Mathematics: [
+["What is 15% of 200?","15","20","30","45",2,"0.15 × 200 = 30."],
+["Solve: 3x + 5 = 20.","3","5","8","15",1,"3x = 15, so x = 5."],
+["What is the area of a rectangle 8 cm long and 4 cm wide?","12 cm²","24 cm²","32 cm²","64 cm²",2,"Area = length × width = 8 × 4 = 32 cm²."],
+["What is the square root of 144?","10","11","12","14",2,"12 × 12 = 144."],
+["Simplify the ratio 12:18.","2:3","3:2","4:9","6:9",0,"Dividing both terms by 6 gives 2:3."]
+]
+};
+
+let questions = [];
+let answers = [];
+let remaining = 0;
+let clock = null;
+let finished = false;
+
+function showPage(id) {
+ document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+ if(id==='results') renderResults();
+ if(id==='leaderboard') renderBoard();
+}
+
+function getName(){
+ return localStorage.getItem('hs_name') || 'Student';
+}
+
+function saveName(){
+ const n=document.getElementById('student').value.trim();
+ if(!n){alert('Please enter your name or study nickname.');return;}
+ localStorage.setItem('hs_name',n);
+ updateWelcome();
+ alert('Your name has been saved on this device.');
+}
+
+function updateWelcome(){
+ const n=localStorage.getItem('hs_name');
+ document.getElementById('welcome').textContent=n?'Welcome, '+n+'!':'Enter your name to personalise your study experience.';
+ document.getElementById('student').value=n||'';
+}
+
+function startExam(){
+ const subject=document.getElementById('subject').value;
+ questions=banks[subject].map((q,i)=>({q,id:i})).sort(()=>Math.random()-.5);
+ answers=Array(questions.length).fill(null);
+ remaining=Number(document.getElementById('duration').value)*60;
+ finished=false;
+ document.getElementById('setup').classList.add('hidden');
+ document.getElementById('result').classList.add('hidden');
+ document.getElementById('test').classList.remove('hidden');
+ document.getElementById('testTitle').textContent=subject+' Practice';
+ renderQuestions(subject);
+ updateTimer();
+ clearInterval(clock);
+ clock=setInterval(()=>{
+  remaining--;
+  updateTimer();
+  if(remaining<=0)submitExam(true);
+ },1000);
+}
+
+function renderQuestions(subject){
+ document.getElementById('progress').textContent=questions.length+' questions • Choose one answer per question.';
+ const holder=document.getElementById('questions');
+ holder.innerHTML='';
+ questions.forEach((item,index)=>{
+  const q=banks[subject][item.id];
+  const box=document.createElement('div');
+  box.className='question';
+  const title=document.createElement('p');
+  title.innerHTML='<strong>'+(index+1)+'. '+escapeHTML(q[0])+'</strong>';
+  box.appendChild(title);
+  for(let j=0;j<4;j++){
+   const b=document.createElement('button');
+   b.className='option';
+   b.textContent=String.fromCharCode(65+j)+'. '+q[j+1];
+   b.onclick=()=>{
+    answers[index]=j;
+    box.querySelectorAll('.option').forEach((x,k)=>x.classList.toggle('selected',k===j));
+   };
+   box.appendChild(b);
+  }
+  holder.appendChild(box);
+ });
+}
+
+function updateTimer(){
+ const m=Math.floor(Math.max(0,remaining)/60);
+ const s=Math.max(0,remaining)%60;
+ document.getElementById('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function submitExam(auto){
+ if(finished)return;
+ if(!auto && !confirm('Submit your examination now?'))return;
+ finished=true;
+ clearInterval(clock);
+ const subject=document.getElementById('subject').value;
+ let correct=0;
+ let html='';
+ questions.forEach((item,index)=>{
+  const q=banks[subject][item.id];
+  const good=answers[index]===q[5];
+  if(good)correct++;
+  html+='<div class="question"><strong>'+(index+1)+'. '+escapeHTML(q[0])+'</strong><p>Your answer: '+(answers[index]===null?'Not answered':escapeHTML(q[answers[index]+1]))+'</p><p>Correct answer: <strong>'+String.fromCharCode(65+q[5])+'. '+escapeHTML(q[q[5]+1])+'</strong></p><p class="small">'+escapeHTML(q[6])+'</p><span class="badge">'+(good?'Correct':'Review this question')+'</span></div>';
+ });
+ const total=questions.length;
+ const pct=Math.round(correct/total*100);
+ const record={name:getName(),subject,score:correct,total,pct,date:new Date().toLocaleString()};
+ const records=JSON.parse(localStorage.getItem('hs_results')||'[]');
+ records.push(record);
+ localStorage.setItem('hs_results',JSON.stringify(records));
+ document.getElementById('test').classList.add('hidden');
+ document.getElementById('result').classList.remove('hidden');
+ document.getElementById('score').innerHTML='<h3>'+correct+' / '+total+' ('+pct+'%)</h3><p>'+escapeHTML(subject)+' • '+(auto?'Time expired.':'Examination submitted.')+'</p>';
+ document.getElementById('review').innerHTML='<h3>Answer Review</h3>'+html;
+}
+
+function resetExam(){
+ clearInterval(clock);
+ document.getElementById('test').classList.add('hidden');
+ document.getElementById('result').classList.add('hidden');
+ document.getElementById('setup').classList.remove('hidden');
+}
+
+function renderResults(){
+ const data=JSON.parse(localStorage.getItem('hs_results')||'[]').slice().reverse();
+ document.getElementById('myResults').innerHTML=data.length?
+ '<table><tr><th>Subject</th><th>Score</th><th>Date</th></tr>'+
+ data.map(r=>'<tr><td>'+escapeHTML(r.subject)+'</td><td>'+r.score+'/'+r.total+' ('+r.pct+'%)</td><td>'+escapeHTML(r.date)+'</td></tr>').join('')+'</table>':
+ '<p>No examinations completed yet. Take your first test!</p>';
+}
+
+function renderBoard(){
+ const data=JSON.parse(localStorage.getItem('hs_results')||'[]').slice().sort((a,b)=>b.pct-a.pct);
+ document.getElementById('board').innerHTML=data.length?
+ '<table><tr><th>Rank</th><th>Student</th><th>Subject</th><th>Score</th></tr>'+
+ data.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+escapeHTML(r.name)+'</td><td>'+escapeHTML(r.subject)+'</td><td>'+r.pct+'%</td></tr>').join('')+'</table>':
+ '<p>No scores yet. Complete an examination to appear here.</p>';
+}
+
+function clearMyResults(){
+ if(!confirm('Delete all examination results stored on this device?'))return;
+ localStorage.removeItem('hs_results');
+ renderResults();
+}
+
+function getLesson(){
+ const subject=document.getElementById('topic').value;
+ const topic=document.getElementById('lesson').value.trim();
+ if(!topic){alert('Enter a topic first.');return;}
+ const prompt='Teach me '+subject+' for Nigerian secondary school examinations, including JAMB, WAEC and NECO. Topic: '+topic+'. Explain it in simple steps, give examples, then set 5 practice questions and explain the answers after I attempt them.';
+ document.getElementById('lessonOutput').innerHTML=
+ '<h3>Your AI Tutor Prompt</h3><textarea id="promptText" style="width:100%;min-height:150px;padding:10px">'+prompt+'</textarea>'+
+ '<button class="primary" onclick="copyPrompt()">Copy Prompt</button>'+
+ '<p><a href="https://chatgpt.com/" target="_blank" rel="noopener">Open ChatGPT</a> and paste the prompt into the chat.</p>';
+}
+
+function copyPrompt(){
+ const t=document.getElementById('promptText');
+ t.select();
+ if(navigator.clipboard && navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t.value).then(()=>alert('Prompt copied!')).catch(()=>alert('Please copy the selected text.'));
+ }else{
+  try{document.execCommand('copy');alert('Prompt copied!');}catch(e){alert('Please copy the selected text.');}
+ }
+}
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+updateWelcome();
+</script>
+</body>
+</html>
